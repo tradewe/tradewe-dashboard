@@ -1,14 +1,15 @@
 // src/web3.tsx
 import { ReactNode } from "react";
-import { mainnet, bsc } from "wagmi/chains";
 import { WagmiProvider } from "wagmi";
-import { createWeb3Modal } from "@web3modal/wagmi/react";
-import { defaultWagmiConfig } from "@web3modal/wagmi";
 
-// Twój WalletConnect Project ID
+import { createAppKit } from "@reown/appkit/react";
+import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
+import { mainnet, bsc } from "@reown/appkit/networks";
+
+// Ten sam projectId co wcześniej z Reown / WalletConnect
 const projectId = "4ee72678b22db76d9841a7762b09f1ed";
 
-// Dane dApp
+// Metadata dApp – jak miałeś do tej pory
 const metadata = {
   name: "TradeWe Presale",
   description: "TradeWe TWE presale dashboard",
@@ -17,46 +18,40 @@ const metadata = {
 };
 
 // Obsługiwane chainy
-const chains = [mainnet, bsc];
+const networks = [mainnet, bsc];
 
-// ⚡ Profesjonalna konfiguracja bez social loginów
-export const wagmiConfig = defaultWagmiConfig({
+// Adapter wagmi dla AppKit
+const wagmiAdapter = new WagmiAdapter({
   projectId,
-  chains,
-  metadata,
-
-  // REALNE portfele
-  enableWalletConnect: true,
-  enableInjected: true, // MetaMask / Rabby / Trust jeśli obsługiwane
-  enableCoinbase: true,
-
-  // ❌ Wyłączamy wszystkie social / cloud wallets
-  enableEmail: false,
-  enableAdmin: false,
-  enableSms: false,
-  enableFarcaster: false,
-  enableSafe: false,
-  enableLedger: false,
-  autoConnect: true
+  networks,
 });
 
-// Web3Modal
-createWeb3Modal({
-  wagmiConfig,
+// Konfiguracja wagmi wyciągnięta z adaptera – używamy w providerze
+export const wagmiConfig = wagmiAdapter.wagmiConfig;
+
+// 🚫 Tu naprawdę wyłączamy email + social loginy
+createAppKit({
+  adapters: [wagmiAdapter],
   projectId,
-  chains,
+  networks,
+  defaultNetwork: bsc, // możesz dać mainnet, jeśli wolisz
+  metadata,
   themeMode: "dark",
   features: {
-    email: false,
-    socials: [],       // <--- najważniejsze, usuwa Discord/Google/Apple
-  },
-  themeVariables: {
-    "--w3m-accent": "#22c55e",
-    "--w3m-border-radius-master": "16px",
+    analytics: true,   // możesz zostawić
+    email: false,      // ❌ wyłączony email-login
+    socials: false,    // ❌ wyłączone wszystkie social loginy
+    onramp: false,     // jak nie chcesz "Buy crypto"
+    swaps: false,      // jak nie chcesz wbudowanych swapów
+    send: false,
   },
 });
 
-// Provider
+// Provider jak wcześniej – App.tsx / wagmi hooki zostają te same
 export function Web3Provider({ children }: { children: ReactNode }) {
-  return <WagmiProvider config={wagmiConfig}>{children}</WagmiProvider>;
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      {children}
+    </WagmiProvider>
+  );
 }

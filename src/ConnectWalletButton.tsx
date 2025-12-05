@@ -1,6 +1,5 @@
 // src/ConnectWalletButton.tsx
-import { useAccount } from "wagmi";
-import { useWeb3Modal } from "@web3modal/wagmi/react";
+import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 
 function shortenAddress(addr?: string) {
   if (!addr) return "";
@@ -8,21 +7,17 @@ function shortenAddress(addr?: string) {
 }
 
 export function ConnectWalletButton() {
-  const { address, isConnected } = useAccount();
-  const { open } = useWeb3Modal();
+  const { open } = useAppKit();
+  const { address, isConnected } = useAppKitAccount();
 
-  const label = isConnected && address
-    ? shortenAddress(address)
-    : "Connect wallet";
+  const label =
+    isConnected && address ? shortenAddress(address) : "Connect wallet";
 
   const handleClick = () => {
-    if (isConnected) {
-      // otwiera ładny widok "Account" z disconnect / network / itp.
-      open({ view: "Account" });
-    } else {
-      // standardowy modal z wyborem portfela (ikony, WalletConnect itd.)
-      open();
-    }
+    // to samo zachowanie co wcześniej:
+    // jeśli nie połączony -> otwórz modal,
+    // jeśli połączony -> otwórz widok konta
+    open({ view: isConnected ? "Account" : "Connect" });
   };
 
   return (
